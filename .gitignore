@@ -1,0 +1,23 @@
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## Compiled
+bin/
+obj/
+out/
+
+## Logs
+*.log
+
+## Packages
+*.nupkg
+packages/
+
+## Cache
+FileContentIndex/
+
+.env
+
+
