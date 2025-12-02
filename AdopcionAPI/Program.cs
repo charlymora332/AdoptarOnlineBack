@@ -21,6 +21,7 @@ using DotNetEnv;
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
+
 // -----------------------------------------------------------------------------
 // 🔹 Conexión a la base de datos
 // -----------------------------------------------------------------------------
@@ -132,10 +133,36 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+//.AddJwtBearer(options =>
+//{
+//    options.RequireHttpsMetadata = false; // true en producción
+//    options.SaveToken = true;
+//    options.TokenValidationParameters = new TokenValidationParameters
+//    {
+//        ValidateIssuerSigningKey = true,
+//        IssuerSigningKey = new SymmetricSecurityKey(key),
+//        ValidateIssuer = false,
+//        ValidateAudience = false,
+//        ClockSkew = TimeSpan.Zero
+//    };
+//});
 .AddJwtBearer(options =>
 {
     options.RequireHttpsMetadata = false; // true en producción
     options.SaveToken = true;
+
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            if (context.Request.Cookies.ContainsKey("jwt"))
+            {
+                context.Token = context.Request.Cookies["jwt"];
+            }
+            return Task.CompletedTask;
+        }
+    };
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -190,6 +217,7 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    app.UseDeveloperExceptionPage();
 }
 
 // -----------------------------------------------------------------------------
@@ -199,6 +227,26 @@ app.UseHttpsRedirection();
 app.UseAuthentication(); // <--- obligatorio
 
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next(); // Ejecuta el siguiente middleware
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine("💥 Excepción capturada globalmente:");
+        Console.WriteLine(ex);
+
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsJsonAsync(new
+        {
+            error = ex.Message,
+            detalle = ex.InnerException?.Message
+        });
+    }
+});
 
 // -----------------------------------------------------------------------------
 // 🔹 Mapear Controllers
