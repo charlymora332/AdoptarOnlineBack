@@ -1,5 +1,5 @@
 ﻿using AdopcionOnline.Infrastructure;
-using Application.Interfaces;
+using Application.Auth.Intefaces;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -37,6 +37,40 @@ namespace Infrastructure.Repositories
         public async Task GuardarCambiosAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<RefreshToken> CrearTokenRefrescoAsync(int usuarioId, string token, DateTime expiracion)
+        {
+            var tokenRefresco = new RefreshToken
+            {
+                UsuarioId = usuarioId,
+                Token = token,
+                CreadoEl = DateTime.UtcNow,
+                UltimoUso = DateTime.UtcNow,
+                Expiracion = expiracion,
+                Revocado = false
+            };
+
+            await _context.RefreshTokens.AddAsync(tokenRefresco);
+            await _context.SaveChangesAsync();
+            return tokenRefresco;
+        }
+
+        public async Task<RefreshToken> ObtenerTokenRefrescoAsync(string token)
+        {
+            return await _context.RefreshTokens
+                .FirstOrDefaultAsync(t => t.Token == token);
+        }
+
+        public async Task ActualizarTokenRefrescoAsync(RefreshToken tokenRefresco)
+        {
+            _context.RefreshTokens.Update(tokenRefresco);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Usuario> ObtenerPorIdAsync(int id)
+        {
+            return await _context.Set<Usuario>().FindAsync(id);
         }
     }
 }

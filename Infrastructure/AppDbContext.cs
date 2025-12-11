@@ -21,11 +21,19 @@ namespace AdopcionOnline.Infrastructure
         public DbSet<CategoriaGenero> CategoriasGenero { get; set; } // 👈 agregado
 
         public DbSet<Imagen> Imagenes { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
+            modelBuilder.Entity<RefreshToken>()
+       .HasKey(rt => rt.Id);
+
+            modelBuilder.Entity<RefreshToken>()
+      .HasOne<Usuario>()
+      .WithMany(u => u.RefreshTokens)
+      .HasForeignKey(rt => rt.UsuarioId);
             // 🔹 Configuración de relaciones
             modelBuilder.Entity<Usuario>()
                 .HasMany(u => u.Mascotas)
@@ -68,19 +76,28 @@ namespace AdopcionOnline.Infrastructure
                //new CategoriaGenero { Id = 3, Nombre = "Adulto" }
                );
 
+            modelBuilder.Entity<Tamanio>().HasData(
+      new Tamanio { Id = 1, TamanioMascota = "Pequeño" },
+        new Tamanio { Id = 2, TamanioMascota = "Mediano" },
+        new Tamanio { Id = 3, TamanioMascota = "Grande" }
+
+      );
+
             // 🔹 Seed de Personalidades
             modelBuilder.Entity<CategoriaPersonalidad>().HasData(
                     new CategoriaPersonalidad { Id = 1, Nombre = "Juguetón" },
-                    new CategoriaPersonalidad { Id = 2, Nombre = "Tranquilo" },
-                    new CategoriaPersonalidad { Id = 3, Nombre = "Protector" }
+                    new CategoriaPersonalidad { Id = 2, Nombre = "Protector" },
+                    new CategoriaPersonalidad { Id = 3, Nombre = "Bravo" },
+                    new CategoriaPersonalidad { Id = 4, Nombre = "Cariñoso" },
+                    new CategoriaPersonalidad { Id = 5, Nombre = "Guardián" },
+                    new CategoriaPersonalidad { Id = 6, Nombre = "Tranquilo" }
                 );
 
             // 🔹 Seed de Tipo Animal
             modelBuilder.Entity<CategoriaTipoAnimal>().HasData(
                 new CategoriaTipoAnimal { Id = 1, Nombre = "Perro" },
                 new CategoriaTipoAnimal { Id = 2, Nombre = "Gato" },
-                new CategoriaTipoAnimal { Id = 3, Nombre = "Conejo" },
-                new CategoriaTipoAnimal { Id = 4, Nombre = "Ave" }
+                new CategoriaTipoAnimal { Id = 3, Nombre = "Ave" }
             );
         }
     }

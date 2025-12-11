@@ -119,12 +119,27 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = (byte)2,
-                            Nombre = "Tranquilo"
+                            Nombre = "Protector"
                         },
                         new
                         {
                             Id = (byte)3,
-                            Nombre = "Protector"
+                            Nombre = "Bravo"
+                        },
+                        new
+                        {
+                            Id = (byte)4,
+                            Nombre = "Cariñoso"
+                        },
+                        new
+                        {
+                            Id = (byte)5,
+                            Nombre = "Guardián"
+                        },
+                        new
+                        {
+                            Id = (byte)6,
+                            Nombre = "Tranquilo"
                         });
                 });
 
@@ -155,11 +170,6 @@ namespace Infrastructure.Migrations
                         new
                         {
                             Id = (byte)3,
-                            Nombre = "Conejo"
-                        },
-                        new
-                        {
-                            Id = (byte)4,
                             Nombre = "Ave"
                         });
                 });
@@ -263,6 +273,57 @@ namespace Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Tamanio");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            TamanioMascota = "Pequeño"
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            TamanioMascota = "Mediano"
+                        },
+                        new
+                        {
+                            Id = (byte)3,
+                            TamanioMascota = "Grande"
+                        });
+                });
+
+            modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("Expiration")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("LastUsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("Revoked")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("RefreshTokens");
                 });
 
             modelBuilder.Entity("Domain.Entities.Usuario", b =>
@@ -367,6 +428,15 @@ namespace Infrastructure.Migrations
                     b.Navigation("Mascota");
                 });
 
+            modelBuilder.Entity("Domain.Entities.RefreshToken", b =>
+                {
+                    b.HasOne("Domain.Entities.Usuario", null)
+                        .WithMany("RefreshTokens")
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Domain.Entities.Mascotas.CategoriaEdad", b =>
                 {
                     b.Navigation("Mascotas");
@@ -400,6 +470,8 @@ namespace Infrastructure.Migrations
             modelBuilder.Entity("Domain.Entities.Usuario", b =>
                 {
                     b.Navigation("Mascotas");
+
+                    b.Navigation("RefreshTokens");
                 });
 #pragma warning restore 612, 618
         }

@@ -13,5 +13,7 @@ namespace Domain.Entities
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
 
         public List<Mascota> Mascotas { get; set; } = new List<Mascota>();
+
+        public ICollection<RefreshToken> RefreshTokens { get; set; }
     }
 }

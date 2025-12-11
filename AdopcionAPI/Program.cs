@@ -1,22 +1,21 @@
 ﻿using AdopcionOnline.Infrastructure;
 using AdopcionOnline.Infrastructure.Repositories;
-using Application.Helpers;
-using Application.Interfaces;
-using Application.Services;
-using Application.Services.IA;
-using Application.Services.Mascotas;
-using Infrastructure.Repositories;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.FileProviders;
-using System.Text;
-
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-
-using Microsoft.IdentityModel.Tokens;
-
-using System.Text;
-
+using Application.Archivos.Helpers;
+using Application.Archivos.Intefaces;
+using Application.Auth.Intefaces;
+using Application.Auth.Services;
+using Application.IA.Intefaces;
+using Application.IA.Services;
+using Application.Mascotas.Intefaces;
+using Application.Mascotas.Services;
 using DotNetEnv;
+using Infrastructure.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 Env.Load();
 
@@ -57,7 +56,6 @@ builder.Services.AddCors(options =>
 // 🔹 Repositorios
 // -----------------------------------------------------------------------------
 builder.Services.AddScoped<IMascotaRepository, MascotaRepository>();
-builder.Services.AddScoped<IImagenRepository, ImagenRepository>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 //builder.Services.AddScoped<IMascotaAdminRepository, MascotaAdminRepository>();
 
@@ -67,8 +65,6 @@ builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IMascotaService, MascotaService>();
 builder.Services.AddScoped<IImagenService, ImagenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-
-builder.Services.AddScoped<IMascotaAdminService, MascotaAdminService>();
 
 builder.Services.AddHttpClient<IIaDescripcionService, IaDescripcionService>();
 builder.Services.AddHttpContextAccessor();
@@ -87,6 +83,9 @@ builder.Services.AddHttpClient<IIaDescripcionService, IaDescripcionService>(clie
 // 🔹 Controllers y Swagger
 // -----------------------------------------------------------------------------
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(typeof(Program).Assembly);
+builder.Services.AddMediatR(cfg =>
+    cfg.RegisterServicesFromAssembly(typeof(Application.Mascotas.Services.MascotaService).Assembly));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

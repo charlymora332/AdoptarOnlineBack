@@ -7,10 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Services\IA\IaDescripcion.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="12.0.1" />
+    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
@@ -21,6 +19,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Auth\Helpers\" />
+    <Folder Include="IA\DTOs\" />
+    <Folder Include="IA\Helpers\" />
+    <Folder Include="Mascotas\Models\Querys\" />
+    <Folder Include="Zbase\DTOs\" />
+    <Folder Include="Zbase\Helpers\" />
+    <Folder Include="Zbase\Intefaces\" />
+    <Folder Include="Zbase\Services\" />
+    <Folder Include="Mascotas\Helpers\" />
   </ItemGroup>
 
 </Project>

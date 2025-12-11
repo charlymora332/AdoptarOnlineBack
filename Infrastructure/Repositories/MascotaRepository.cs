@@ -1,5 +1,6 @@
-﻿using Application.DTOs.Mascota;
-using Application.Interfaces;
+﻿using Application.Mascotas.Intefaces;
+using Application.Mascotas.Models.Requests;
+using Application.Mascotas.Models.Responses;
 using Domain.Entities.Mascotas;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,62 +15,114 @@ namespace AdopcionOnline.Infrastructure.Repositories
             _context = context;
         }
 
-        public async Task<List<MascotaPreviewDto>> GetMascotasUserAsync(
-byte? generoId,
-List<byte>? categoriasEdadId,
-List<byte>? tiposMascotaId,
-List<byte>? personalidadesMascotasId,
-List<byte>? tamaniosMascotaId,
-int? pagina,
-int? cantidadConsulta)
+        //public async Task<List<MascotaPreviewDto>> GetMascotasUserAsync(FiltrosRequestDTO filtros)
+        //{
+        //    var query = _context.Mascotas
+        //        .Include(m => m.CategoriaTipoAnimal)
+        //        .Include(m => m.CategoriaEdad)
+        //        .Include(m => m.MascotaPersonalidades)
+        //            .ThenInclude(mp => mp.CategoriaPersonalidad)
+        //        .Where(m => m.Disponible && m.Aprobado)
+        //        .AsQueryable();
+
+        //    if (filtros.GeneroId.HasValue)
+        //        query = query.Where(m => m.CategoriaGeneroId == filtros.GeneroId.Value);
+
+        //    if (filtros.CategoriaEdadId != null && (filtros.CategoriaEdadId.Any()))
+        //        query = query.Where(m => filtros.CategoriaEdadId.Contains(m.CategoriaEdadId));
+
+        //    if (filtros.TipoMascotaId != null && filtros.TipoMascotaId.Any())
+        //        query = query.Where(m => filtros.TipoMascotaId.Contains(m.TipoAnimalId));
+
+        //    if (filtros.PersonalidadesMascotasId != null && filtros.PersonalidadesMascotasId.Any())
+        //        query = query.Where(m => m.MascotaPersonalidades
+        //            .Any(p => filtros.PersonalidadesMascotasId.Contains(p.CategoriaPersonalidadId)));
+
+        //    if (filtros.TamanioMascotaId != null && filtros.TamanioMascotaId.Any())
+        //        query = query.Where(m => filtros.TamanioMascotaId.Contains(m.TamanioId));
+
+        //    if (filtros.Pagina.HasValue && filtros.CantidadConsulta.HasValue)
+        //        query = query
+        //            .Skip((filtros.Pagina.Value - 1) * filtros.CantidadConsulta.Value)
+        //            .Take(filtros.CantidadConsulta.Value);
+
+        //    var mascotas = await query
+        //        .Select(m => new MascotaPreviewDto
+        //        {
+        //            Id = m.Id,
+        //            Nombre = m.Nombre,
+        //            Genero = m.CategoriaGeneroId,
+        //            EdadAnios = (byte)(m.EdadMeses / 12),
+        //            EdadMeses = (byte)(m.EdadMeses % 12),
+        //            CategoriaEdad = m.CategoriaEdad.Nombre,
+        //            Aprobado = m.Aprobado,
+        //            Disponible = m.Disponible,
+        //            Tamanio = m.TamanioId,
+        //            TipoAnimal = m.TipoAnimalId,
+
+        //            //TipoAnimalString = m.CategoriaTipoAnimal != null
+        //            //    ? m.CategoriaTipoAnimal.Nombre
+        //            //    : "Desconocido",
+
+        //            PersonalidadesId = m.MascotaPersonalidades
+        //                .Select(p => p.CategoriaPersonalidad.Id)
+        //                .ToList(),
+
+        //            Personalidades = m.MascotaPersonalidades
+        //                .Select(p => p.CategoriaPersonalidad.Nombre)
+        //                .ToList(),
+
+        //            DescripcionCorta = m.DescripcionCorta,
+        //            ImagenUrl = m.ImagenUrl
+        //        })
+        //        .ToListAsync();
+
+        //    return mascotas;
+        //}
+
+        public async Task<List<MascotaPreviewDto>> GetMascotasUserAsync(FiltrosRequestDTO filtros)
         {
+            // 1. Inicios de Query: SOLO Includes NECESARIOS o AsQueryable
+            // Se eliminan includes que solo se proyectan en el DTO (como MascotaPersonalidades)
             var query = _context.Mascotas
-                .Include(m => m.CategoriaTipoAnimal)
+                // Dejar Include si el DTO lo usa como propiedad navegacional (ej: m.CategoriaEdad.Nombre)
                 .Include(m => m.CategoriaEdad)
-                .Include(m => m.MascotaPersonalidades)
-                    .ThenInclude(mp => mp.CategoriaPersonalidad)
                 .Where(m => m.Disponible && m.Aprobado)
                 .AsQueryable();
 
-            if (generoId.HasValue)
-                query = query.Where(m => m.CategoriaGeneroId == generoId.Value);
+            // 2. Filtros Condicionales (Limpieza con ?.Any())
+            if (filtros.GeneroId.HasValue)
+                query = query.Where(m => m.CategoriaGeneroId == filtros.GeneroId.Value);
 
-            if (categoriasEdadId != null && categoriasEdadId.Any())
-                query = query.Where(m => categoriasEdadId.Contains(m.CategoriaEdadId));
+            if (filtros.CategoriaEdadId?.Any() == true)
+                query = query.Where(m => filtros.CategoriaEdadId.Contains(m.CategoriaEdadId));
 
-            if (tiposMascotaId != null && tiposMascotaId.Any())
-                query = query.Where(m => tiposMascotaId.Contains(m.TipoAnimalId));
+            if (filtros.TipoMascotaId?.Any() == true)
+                query = query.Where(m => filtros.TipoMascotaId.Contains(m.TipoAnimalId));
 
-            if (personalidadesMascotasId != null && personalidadesMascotasId.Any())
+            if (filtros.PersonalidadesMascotasId?.Any() == true)
                 query = query.Where(m => m.MascotaPersonalidades
-                    .Any(p => personalidadesMascotasId.Contains(p.CategoriaPersonalidadId)));
+                    .Any(p => filtros.PersonalidadesMascotasId.Contains(p.CategoriaPersonalidadId)));
 
-            if (tamaniosMascotaId != null && tamaniosMascotaId.Any())
-                query = query.Where(m => tamaniosMascotaId.Contains(m.TamanioId));
+            if (filtros.TamanioMascotaId?.Any() == true)
+                query = query.Where(m => filtros.TamanioMascotaId.Contains(m.TamanioId));
 
-            if (pagina.HasValue && cantidadConsulta.HasValue)
+            // 3. Paginación
+            if (filtros.Pagina.HasValue && filtros.CantidadConsulta.HasValue)
                 query = query
-                    .Skip((pagina.Value - 1) * cantidadConsulta.Value)
-                    .Take(cantidadConsulta.Value);
+                    .Skip((filtros.Pagina.Value - 1) * filtros.CantidadConsulta.Value)
+                    .Take(filtros.CantidadConsulta.Value);
 
+            // 4. Proyección (Select) y Ejecución
             var mascotas = await query
                 .Select(m => new MascotaPreviewDto
                 {
                     Id = m.Id,
                     Nombre = m.Nombre,
-                    Genero = m.CategoriaGeneroId,
-                    EdadAnios = (byte)(m.EdadMeses / 12),
-                    EdadMeses = (byte)(m.EdadMeses % 12),
-                    CategoriaEdad = m.CategoriaEdad.Nombre,
-                    Aprobado = m.Aprobado,
-                    Disponible = m.Disponible,
-                    Tamanio = m.TamanioId,
-                    TipoAnimal = m.TipoAnimalId,
+                    // ... otras propiedades
+                    CategoriaEdad = m.CategoriaEdad.Nombre, // Usa el include de CategoriaEdad
 
-                    //TipoAnimalString = m.CategoriaTipoAnimal != null
-                    //    ? m.CategoriaTipoAnimal.Nombre
-                    //    : "Desconocido",
-
+                    // Proyección de colecciones sin includes previos
                     PersonalidadesId = m.MascotaPersonalidades
                         .Select(p => p.CategoriaPersonalidad.Id)
                         .ToList(),
@@ -78,6 +131,7 @@ int? cantidadConsulta)
                         .Select(p => p.CategoriaPersonalidad.Nombre)
                         .ToList(),
 
+                    // ... otras propiedades
                     DescripcionCorta = m.DescripcionCorta,
                     ImagenUrl = m.ImagenUrl
                 })
@@ -86,7 +140,6 @@ int? cantidadConsulta)
             return mascotas;
         }
 
-        /// Método para consultar la información detallada de una mascota por su ID
         public async Task<MascotaInfoDto?> GetMascotaDetallesUserAsync(int id)
         {
             return await _context.Mascotas
@@ -108,42 +161,6 @@ int? cantidadConsulta)
                 })
                 .FirstOrDefaultAsync();
         }
-
-        //public async Task<Mascota?> GetByIdAsync(int id)
-        //{
-        //    return await _context.Mascotas
-        //        .Include(m => m.CategoriaEdad)
-        //        .Include(m => m.CategoriaTipoAnimal)
-        //        .Include(m => m.MascotaPersonalidades)
-        //            .ThenInclude(mp => mp.CategoriaPersonalidad)
-        //        .FirstOrDefaultAsync(m => m.Id == id); // ✅ sin incluir ImagenUrl
-        //}
-
-        //    public async Task<List<MascotaPreviewDto>> GetAllAsync()
-        //    {
-        //        var mascotas = await _context.Mascotas
-        //          //.Where(m => m.Disponible != true && m.Aprobado != true)
-
-        //          .Select(m => new MascotaPreviewDto
-        //          {
-        //              Id = m.Id,
-        //              Nombre = m.Nombre,
-        //              EdadMeses = m.EdadMeses,
-        //              // Solo la primera personalidad
-        //              //PersonalidadPrincipal = m.PersonalidadesId
-        //              //    .Select(p => p.CategoriaPersonalidad.Nombre)
-        //              //    .FirstOrDefault() ?? string.Empty,
-        //              Personalidades = m.MascotaPersonalidades
-        //.Select(p => p.CategoriaPersonalidad.Nombre)
-        //.ToList(),
-        //              DescripcionCorta = m.DescripcionCorta,
-        //              ImagenUrl = m.ImagenUrl,
-        //              Aprobado = m.Aprobado,
-        //              Disponible = m.Disponible
-        //          })
-        //          .ToListAsync();
-        //        return mascotas;
-        //    }
 
         public async Task AddAsync(Mascota mascota)
         {
@@ -168,7 +185,7 @@ int? cantidadConsulta)
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task EliminarAsync(int id)
         {
             var mascota = await _context.Mascotas.FindAsync(id);
             if (mascota is not null)
@@ -227,9 +244,7 @@ int? cantidadConsulta)
                     DescripcionLarga = m.DescripcionLarga,
                     DescripcionCorta = m.DescripcionCorta,
                     ImagenUrl = m.ImagenUrl,
-                    //Personalidades = m.PersonalidadesId
-                    //    .Select(p => p.CategoriaPersonalidad.Nombre)
-                    //    .ToList()
+
                     Personalidades = m.MascotaPersonalidades
                         .Select(p => p.CategoriaPersonalidad.Nombre)
                         .ToList()
@@ -255,19 +270,19 @@ int? cantidadConsulta)
             await _context.SaveChangesAsync();
         }
 
-        public async Task EliminarAsync(int id)
-        {
-            var mascota = await _context.Mascotas.FindAsync(id);
-            if (mascota is not null)
-            {
-                _context.Mascotas.Remove(mascota);
-                await _context.SaveChangesAsync();
-            }
-        }
+        //public async Task EliminarAsync(int id)
+        //{
+        //    var mascota = await _context.Mascotas.FindAsync(id);
+        //    if (mascota is not null)
+        //    {
+        //        _context.Mascotas.Remove(mascota);
+        //        await _context.SaveChangesAsync();
+        //    }
+        //}
 
         public async Task<Mascota?> GetByIdAsync(int id)
         {
-            return await _context.Mascotas
+            return await _context.Mascotas.AsNoTracking()
                 .Include(m => m.CategoriaEdad)
                 //.Include(m => m.CategoriaTipoAnimal)
                 //.Include(m => m.MascotaPersonalidades)
